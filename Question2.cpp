@@ -5,75 +5,78 @@
 #include <cstring>
 #include<string>
 #include<iomanip>
+#include"Question1.cpp"
 
 using namespace std;
 
-class InvestmentData {
+class InvestmentData1 {
 public:
     int year;
     double growthPrice;
     double inflationRate;
 
   
-    InvestmentData(double growthPrice = 0.0, int year = 0, double inflationRate = 0.0) {
+    InvestmentData1(double growthPrice = 0.0, int year = 0, double inflationRate = 0.0) {
         this->growthPrice = growthPrice;
         this->year = year;
         this->inflationRate = inflationRate;
     }
 };
 
-class ProfitTaxCalc {
+class ProfitTaxCalc1 {
 private:
     double taxRate;
 
 public:
   
-    ProfitTaxCalc() {
+    ProfitTaxCalc1() {
         taxRate = 20.0;  
     }
 
     // function to calculate tax on capital gain
-    double calculateTax(double cGain) {
-        return (cGain > 0) ? (cGain * (taxRate / 100)) : 0;
+    double calculateTax1(double cGain , int sellingyear) {
+        return sellingyear < 2024 ? ((cGain > 0) ? (cGain * (taxRate / 100)) : 0) : ((cGain > 0) ? (cGain * 0.125) : 0);
     }
 };
 
 
-class InvestmentHouse {
+class InvestmentHouse1 {
 private:
     InvestmentData* fileData;  // dynamically allocated array of csv data.
     long costPrice;
     int purchaseYear;
     double sellingPrice;
+    int sellingyear;
     int dataSize;  // number of entries in the csv data file.
 
 public:
  
-    InvestmentHouse(double Cp, int Poy, string path) {
+    InvestmentHouse1(double Cp, int Poy, string path , int sy) {
         this->fileData = getTheData(path, dataSize);  // Get the data from the CSV file
         this->costPrice = Cp;
         this->purchaseYear = Poy;
+        this->sellingyear=sy;
     }
 
     double sellingPriceCalc(int year) {
         sellingPrice = costPrice;
         int index = checkGrowthYear(this->purchaseYear, fileData, dataSize);
-
+        
         for (int i = index+1; fileData[i].year <= year && i < dataSize; i++) {
-            sellingPrice = sellingPrice *  ( 1 + ((fileData[i].growthPrice - fileData[i].inflationRate) / 100));
+            sellingPrice =fileData[i].year < 2024 ? (sellingPrice *  ( 1 + ((fileData[i].growthPrice - fileData[i].inflationRate) / 100))) : (sellingPrice *  ( 1 + ((fileData[i].growthPrice ) / 100))) ;
         }
 
         return sellingPrice;
     }
     
     double longTermCapitalGainTax() {
-        ProfitTaxCalc p;
-        double investmentTax = p.calculateTax(sellingPrice - costPrice);
+        ProfitTaxCalc1 p;
+        double investmentTax = p.calculateTax1(sellingPrice - costPrice, sellingyear);
         return investmentTax;
     }
 
-    ~InvestmentHouse() {
-        delete[] fileData;  // free dynamically allocated memory.(taxRate / 100)
+    ~InvestmentHouse1() {
+        delete[] fileData;  // free dynamically allocated memory.
     }
 
 private:
@@ -143,15 +146,38 @@ private:
 int main() {
     
     string filePath = "price-inflation.csv";  
-    double costPrice = 5000000;  //data is hardcoaded you can mention any amount
-    int purchaseYear = 2010;
+    long costPrice=5000000;
+    int purchaseYear=2010;
+    int sellingyear;
+    // cout<<"Enter the Property Purchase Price :"<<endl;
+    // cin>>costPrice;
 
+    // cout<<endl<<"Enter the Property Purchase Year :"<<endl;
+    // cin>>purchaseYear;
+    // cout<<endl;
+
+    cout<<endl<<"Enter the Property Selling Year :"<<endl;
+    cin>>sellingyear;
+    cout<<endl;
+
+    cout<<"Below is the selling price and Long-Term Capital Gain Tax calculation before change in tax rate"<<endl;
     InvestmentHouse investment(costPrice, purchaseYear, filePath);
-    double sellingPrice = investment.sellingPriceCalc(2019);  //selling yeartaken  2025 , you can take any year
+    double sellingPrice = investment.sellingPriceCalc(sellingyear); 
     double tax = investment.longTermCapitalGainTax();
-
     cout << "Selling Price: " <<fixed<<setprecision(4)<< sellingPrice << endl;
     cout << "Long-Term Capital Gain Tax: " <<fixed<<setprecision(4)<< tax << endl;
+
+    cout<<"Below is the selling price and Long-Term Capital Gain Tax calculation after change in tax rate"<<endl;
+    InvestmentHouse1 investment1(costPrice, purchaseYear, filePath,sellingyear);
+    double sellingPrice1 = investment1.sellingPriceCalc(sellingyear); 
+    double tax1 = investment1.longTermCapitalGainTax();
+    cout << "Selling Price: " <<fixed<<setprecision(4)<< sellingPrice << endl;
+    cout << "Long-Term Capital Gain Tax: " <<fixed<<setprecision(4)<< tax << endl;
+
+    cout<<"The Difference Between the calculation of selling price and Long-Term Capital Gain Tax, before and after change in tax rate is :"<<endl;
+    cout<<"Difference in selling price is : "<<sellingPrice<<" & "<<sellingPrice1<<" = "<<((sellingPrice-sellingPrice1) < 0 ? (sellingPrice-sellingPrice1)*(-1) : (sellingPrice-sellingPrice1))<<endl;
+    cout<<"Difference in ong-Term Capital Gain Tax calculation is : "<<tax<<" & "<<tax1<<" = "<<((tax-tax1)< 0 ? (tax-tax1*(-1)) : (tax-tax1))<<endl;
+
 
     return 0;
 }
