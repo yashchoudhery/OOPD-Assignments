@@ -2,7 +2,9 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string>
+#include <cstring>
+#include<string>
+#include<iomanip>
 
 using namespace std;
 
@@ -17,6 +19,22 @@ public:
         this->growthPrice = growthPrice;
         this->year = year;
         this->inflationRate = inflationRate;
+    }
+};
+
+class ProfitTaxCalc {
+private:
+    double taxRate;
+
+public:
+  
+    ProfitTaxCalc() {
+        taxRate = 20.0;  
+    }
+
+    // function to calculate tax on capital gain
+    double calculateTax(double cGain) {
+        return (cGain > 0) ? (cGain * (taxRate / 100)) : 0;
     }
 };
 
@@ -41,8 +59,8 @@ public:
         sellingPrice = costPrice;
         int index = checkGrowthYear(this->purchaseYear, fileData, dataSize);
 
-        for (int i = index; fileData[i].year <= year && i < dataSize; i++) {
-            sellingPrice += sellingPrice * (fileData[i].growthPrice - fileData[i].inflationRate) / 100;
+        for (int i = index+1; fileData[i].year <= year && i < dataSize; i++) {
+            sellingPrice = sellingPrice *  ( 1 + ((fileData[i].growthPrice - fileData[i].inflationRate) / 100));
         }
 
         return sellingPrice;
@@ -65,7 +83,7 @@ private:
         if (!file) {
             cerr << "Unable to open file: " << path << endl;
             size = 0;
-            return nullptr;
+            return NULL;
         }
 
         string line;
@@ -84,22 +102,25 @@ private:
 
       
         int i = 0;
+        getline(file, line);
         while (getline(file, line)) {
             stringstream ss(line);
-            string temp;
-            double growthPrice, inflationRate;
-            int year;
+            string temp, yearStr;
+        double growthPrice, inflationRate;
 
-            getline(ss, temp, ',');
-            year = stoi(temp);
+        // It only take the year (first 4 characters).
+        getline(ss, yearStr, ',');
+    //    cout<<yearStr;
+        int year = stoi(yearStr.substr(0, 4));  // Extract only the year part
+            
+        getline(ss, temp, ',');
+        growthPrice = stod(temp);
 
-            getline(ss, temp, ',');
-            growthPrice = stod(temp);
+        getline(ss, temp, ',');
+        inflationRate = stod(temp);
 
-            getline(ss, temp, ',');
-            inflationRate = stod(temp);
-
-            data[i++] = InvestmentData(growthPrice, year, inflationRate);
+            data[i] = InvestmentData(growthPrice, year, inflationRate);
+            i++;
         }
 
         file.close();
@@ -118,21 +139,6 @@ private:
 };
 
 
-class ProfitTaxCalc {
-private:
-    double taxRate;
-
-public:
-  
-    ProfitTaxCalc() {
-        taxRate = 20.0;  
-    }
-
-    // function to calculate tax on capital gain
-    double calculateTax(double cGain) {
-        return (cGain > 0) ? (cGain * (taxRate / 100)) : 0;
-    }
-};
 
 int main() {
     
@@ -141,11 +147,11 @@ int main() {
     int purchaseYear = 2010;
 
     InvestmentHouse investment(costPrice, purchaseYear, filePath);
-    double sellingPrice = investment.sellingPriceCalc(2015);  //selling yeartaken  2015 , you can take any year
+    double sellingPrice = investment.sellingPriceCalc(2019);  //selling yeartaken  2025 , you can take any year
     double tax = investment.longTermCapitalGainTax();
 
-    cout << "Selling Price: " << sellingPrice << endl;
-    cout << "Long-Term Capital Gain Tax: " << tax << endl;
+    cout << "Selling Price: " <<fixed<<setprecision(4)<< sellingPrice << endl;
+    cout << "Long-Term Capital Gain Tax: " <<fixed<<setprecision(4)<< tax << endl;
 
     return 0;
 }
